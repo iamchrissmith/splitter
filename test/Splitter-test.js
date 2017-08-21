@@ -14,17 +14,20 @@ contract('Splitter', (accounts) => {
   });
 
   it('should be owned by Alice', () => {
-    return contract.owner({from:owner})
+    return contract.owner({from:alice})
       .then( (owner) => {
         assert.strictEqual(owner, alice, "Contract is not owned by Alice");
       });
   });
 
   it('should initialize with recipients', () => {
-    return contract.recipientStructs({from:owner})
-      .then( (recipients) => {
-        assert.strictEqual(recipients[0], bob, "Contract did not store Recipient 1");
-        assert.strictEqual(recipients[1], carol, "Contract did not store Recipient 2");
+    return contract.recipientStructs(0, {from:alice})
+      .then( (recipient1) => {
+        assert.strictEqual(recipient1[0], bob, "Contract did not store Recipient 1");
+        contract.recipientStructs(1, {from:alice})
+          .then ( (recipient2) => {
+            assert.strictEqual(recipient2[0], carol, "Contract did not store Recipient 2");
+          });
       });
   });
 
