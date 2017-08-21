@@ -11,6 +11,7 @@ contract Splitter {
   RecipientStruct[] public recipientStructs;
 
   event LogSplitReceived(address sender, uint amount);
+  event LogSplitOddNumber(address sender, uint amountReturned);
   event LogSplitSent(address recipient, uint amount);
 
   function Splitter(address recipient1, address recipient2) {
@@ -36,10 +37,18 @@ contract Splitter {
   {
     if(msg.value == 0) revert();
 
+    uint amountSplit = msg.value;
+
     LogSplitReceived(msg.sender, msg.value);
 
+    if ( msg.value % 2 != 0 ) {
+      amountSplit -= 1;
+      owner.transfer(1);
+      LogSplitReceived(msg.sender, 1);
+    }
+
     totalSent += msg.value;
-    uint halfValue = msg.value / 2;
+    uint halfValue = amountSplit / 2;
     for(uint i=0; i<2; i++) {
       recipientStructs[i].recipient.transfer(halfValue);
       recipientStructs[i].amount += halfValue;

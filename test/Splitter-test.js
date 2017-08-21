@@ -31,7 +31,7 @@ contract('Splitter', (accounts) => {
       });
   });
 
-  it('should split even amounts to Bob and Carol', () => {
+  it('should split even amounts to Bob and Carol and have a record of amount sent to each recipient', () => {
     const bobBalance = web3.eth.getBalance(bob),
           carolBalance = web3.eth.getBalance(carol);
 
@@ -50,13 +50,34 @@ contract('Splitter', (accounts) => {
       });
   });
 
-  it('should report balance of Alice', () => {});
+  it('should report total amount sent from Alice', () => {
+    return contract.splitFunds({from:alice, value: 10})
+      .then( (txn) => {
+        return contract.totalSent({from:alice})
+          .then( (total) => {
+            assert.equal(total.toString(10), 10, "Contract total sent is not correct")
+          });
+      });
+  });
 
-  it('should have a contract balance', () => {});
+  it('should split odd amounts to Bob and Carol and return the 1 Wei', () => {
+    const bobBalance = web3.eth.getBalance(bob),
+          carolBalance = web3.eth.getBalance(carol);
 
-  it('should split odd amounts to Bob and Carol and hold the extra Wei', () => {});
-
-  it('should report balance of Bob and Carol', () => {});
+    return contract.splitFunds({from:alice, value: 11})
+      .then( (txn) => {
+        return contract.recipientStructs(0, {from:alice})
+          .then( (recipient1) => {
+            assert.equal((bobBalance.plus(5)).toString(10), web3.eth.getBalance(bob).toString(10), "Recipient 1 did not receive the funds");
+            assert.equal(recipient1[1].toString(10), 5, "Contract did not send half to Recipient 1");
+            return contract.recipientStructs(1, {from:alice})
+              .then( (recipient2) => {
+                assert.equal((carolBalance.plus(5)).toString(10), web3.eth.getBalance(carol).toString(10), "Recipient 2 did not receive the funds");
+                assert.equal(recipient2[1].toString(10), 5, "Contract did not send half to Recipient 2");
+              });
+          });
+      });
+  });
 
   it('Alice should be able to kill it', () => {});
 });
