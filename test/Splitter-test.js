@@ -31,13 +31,30 @@ contract('Splitter', (accounts) => {
       });
   });
 
-  it('should have a contract balance', () => {});
+  it('should split even amounts to Bob and Carol', () => {
+    const bobBalance = web3.eth.getBalance(bob),
+          carolBalance = web3.eth.getBalance(carol);
 
-  it('should split even amounts to Bob and Carol', () => {});
-
-  it('should split odd amounts to Bob and Carol and hold the extra Wei', () => {});
+    return contract.splitFunds({from:alice, value: 10})
+      .then( (txn) => {
+        return contract.recipientStructs(0, {from:alice})
+          .then( (recipient1) => {
+            assert.equal((bobBalance.plus(5)).toString(10), web3.eth.getBalance(bob).toString(10), "Recipient 1 did not receive the funds");
+            assert.equal(recipient1[1].toString(10), 5, "Contract did not send half to Recipient 1");
+            return contract.recipientStructs(1, {from:alice})
+              .then( (recipient2) => {
+                assert.equal((carolBalance.plus(5)).toString(10), web3.eth.getBalance(carol).toString(10), "Recipient 2 did not receive the funds");
+                assert.equal(recipient2[1].toString(10), 5, "Contract did not send half to Recipient 2");
+              });
+          });
+      });
+  });
 
   it('should report balance of Alice', () => {});
+
+  it('should have a contract balance', () => {});
+
+  it('should split odd amounts to Bob and Carol and hold the extra Wei', () => {});
 
   it('should report balance of Bob and Carol', () => {});
 
