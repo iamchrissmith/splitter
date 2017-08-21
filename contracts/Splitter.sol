@@ -56,4 +56,11 @@ contract Splitter {
     }
     return true;
   }
+
+  function killMe()
+    public
+    onlyMe()
+  {
+    suicide(owner);
+  }
 }

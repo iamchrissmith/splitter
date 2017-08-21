@@ -79,5 +79,13 @@ contract('Splitter', (accounts) => {
       });
   });
 
-  it('Alice should be able to kill it', () => {});
+  it('Alice should be able to kill it', () => {
+    return contract.killMe({from:alice})
+      .then( (txn) => {
+        return contract.owner({from:alice})
+          .then( (owner) => {
+            assert.strictEqual(owner, '0x', "Alice could not kill the contract");
+          });
+      });
+  });
 });
