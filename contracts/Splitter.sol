@@ -32,10 +32,10 @@ contract Splitter {
     }
 
     LogFundsSent(recipient1, amountSplit / 2);
-    recipient1.transfer(halfValue);
+    recipient1.transfer(amountSplit / 2);
 
     LogFundsSent(recipient1, amountSplit / 2);
-    recipient2.transfer(halfValue);
+    recipient2.transfer(amountSplit / 2);
 
     return true;
   }
@@ -45,10 +45,8 @@ contract Splitter {
     onlyMe()
   {
     if (this.balance > 0) {
-      uint toSend = this.balance;
-      this.balance = 0;
-      LogFundsSent(owner, toSend);
-      owner.transfer(toSend);
+      LogFundsSent(owner, this.balance);
+      owner.transfer(this.balance);
     }
     suicide(owner);
   }
