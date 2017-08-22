@@ -2,26 +2,12 @@ pragma solidity ^0.4.6;
 
 contract Splitter {
   address public owner;
-  uint public totalSent;
-
-  struct RecipientStruct {
-    address recipient;
-    uint amount;
-  }
-  RecipientStruct[] public recipientStructs;
 
   event LogSplitReceived(address sender, uint amount);
-  event LogSplitOddNumber(address sender, uint amountReturned);
-  event LogSplitSent(address recipient, uint amount);
+  event LogFundsSent(address recipient, uint amount);
 
-  function Splitter(address recipient1, address recipient2) {
+  function Splitter() {
     owner = msg.sender;
-    RecipientStruct memory firstRecipient;
-    firstRecipient.recipient = recipient1;
-    recipientStructs.push(firstRecipient);
-    RecipientStruct memory secondRecipient;
-    secondRecipient.recipient = recipient2;
-    recipientStructs.push(secondRecipient);
   }
 
   modifier onlyMe() {
@@ -29,7 +15,7 @@ contract Splitter {
     _;
   }
 
-  function splitFunds()
+  function splitFunds(address recipient1, address recipient2)
     public
     onlyMe()
     payable
@@ -43,17 +29,14 @@ contract Splitter {
 
     if ( msg.value % 2 != 0 ) {
       amountSplit -= 1;
-      owner.transfer(1);
-      LogSplitReceived(msg.sender, 1);
     }
 
-    totalSent += msg.value;
-    uint halfValue = amountSplit / 2;
-    for(uint i=0; i<2; i++) {
-      recipientStructs[i].recipient.transfer(halfValue);
-      recipientStructs[i].amount += halfValue;
-      LogSplitSent(recipientStructs[i].recipient, halfValue);
-    }
+    LogFundsSent(recipient1, amountSplit / 2);
+    recipient1.transfer(halfValue);
+
+    LogFundsSent(recipient1, amountSplit / 2);
+    recipient2.transfer(halfValue);
+
     return true;
   }
 
@@ -61,6 +44,12 @@ contract Splitter {
     public
     onlyMe()
   {
+    if (this.balance > 0) {
+      uint toSend = this.balance;
+      this.balance = 0;
+      LogFundsSent(owner, toSend);
+      owner.transfer(toSend);
+    }
     suicide(owner);
   }
 }
