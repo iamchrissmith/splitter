@@ -1,9 +1,9 @@
 const Splitter = artifacts.require('./Splitter.sol');
 
 contract('Splitter', (accounts) => {
-  const alice = accounts[0],
-        bob = accounts[1],
-        carol = accounts[2];
+  const alice = accounts[0];
+  const bob   = accounts[1];
+  const carol = accounts[2];
   let contract;
 
   beforeEach( () => {
@@ -47,16 +47,28 @@ contract('Splitter', (accounts) => {
       });
   });
 
-  // xit('should allow recipients to withdraw funds', () => {
-  //   const bobBalance = web3.eth.balance(bob);
-  //
-  //   return contract.withdrawFunds({from:bob})
-  //     .then( (txn) => {
-  //       assert.equal(contract.balances[bob], 5, "Recipient 1 did not receive the funds");
-  //       assert.equal(contract.balances[carol], 5, "Recipient 2 did not receive the funds");
-  //       assert.equal(contract.balances[alice], 1, "Send did not receive the remainder");
-  //     });
-  // });
+  it('should allow recipients to withdraw funds', () => {
+    const startingBalance = web3.eth.getBalance(bob);
+    let toBeSent;
+
+    return contract.splitFunds(bob, carol, {from:alice, value: 10})
+      .then( (txn) => {
+        return contract.balances(bob);
+      }).then( balance => {
+        assert.equal(balance.toString(10), "5", "Recipient 1 was not allotted half the funds");
+        toBeSent = balance;
+        return contract.withdrawFunds({from:bob, gasPrice: 1})
+      }).then( txn => {
+        const sentLessGas = toBeSent.minus(txn.receipt.gasUsed);
+        const currentBalance = web3.eth.getBalance(bob);
+
+        assert.deepEqual(startingBalance.plus(sentLessGas), currentBalance, "Recipient 1 did not receive the funds");
+
+        return contract.balances(bob);
+      }).then( balance => {
+        assert.equal(balance.toString(10), "0", "Not All Funds Sent");
+      });
+  });
 
   it('Alice should be able to kill it', () => {
     return contract.killMe({from:alice})

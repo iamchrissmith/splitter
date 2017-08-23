@@ -41,22 +41,26 @@ contract Splitter {
     return true;
   }
 
-  /*function withdrawFunds()
+  function withdrawFunds()
     public
     payable
-    return(bool success)
+    returns(bool success)
   {
+    if(balances[msg.sender] == 0) revert();
 
-  }*/
+    uint toSend = balances[msg.sender];
+    balances[msg.sender] = 0;
+    LogFundsSent(msg.sender, toSend);
+
+    msg.sender.transfer(toSend);
+
+    return true;
+  }
 
   function killMe()
     public
     onlyMe()
   {
-    if (this.balance > 0) {
-      LogFundsSent(owner, this.balance);
-      owner.transfer(this.balance);
-    }
     suicide(owner);
   }
 }
