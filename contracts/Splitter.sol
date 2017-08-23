@@ -43,7 +43,6 @@ contract Splitter {
 
   function withdrawFunds()
     public
-    payable
     returns(bool success)
   {
     if(balances[msg.sender] == 0) revert();
