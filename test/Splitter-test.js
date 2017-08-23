@@ -20,28 +20,43 @@ contract('Splitter', (accounts) => {
       });
   });
 
-  it('should split even amounts to Bob and Carol and have a record of amount sent to each recipient', () => {
-    const bobBalance = web3.eth.getBalance(bob),
-          carolBalance = web3.eth.getBalance(carol);
-
+  it('should split even amounts to Bob and Carol and have a record of the amount for each recipient', () => {
     return contract.splitFunds(bob, carol, {from:alice, value: 10})
       .then( (txn) => {
-        assert.equal((bobBalance.plus(5)).toString(10), web3.eth.getBalance(bob).toString(10), "Recipient 1 did not receive the funds");
-        assert.equal((carolBalance.plus(5)).toString(10), web3.eth.getBalance(carol).toString(10), "Recipient 2 did not receive the funds");
+        return contract.balances(bob);
+      }).then( bobBalance => {
+        assert.equal(bobBalance.toString(10), "5", "Recipient 1 did not receive the funds");
+        return contract.balances(carol);
+      }).then( carolBalance => {
+        assert.equal(carolBalance.toString(10), "5", "Recipient 2 did not receive the funds");
       });
   });
 
-  it('should split odd amounts to Bob and Carol and save the 1 Wei', () => {
-    const bobBalance = web3.eth.getBalance(bob);
-    const carolBalance = web3.eth.getBalance(carol);
-
+  it('should split odd amounts to Bob and Carol and save the 1 Wei for Alice', () => {
     return contract.splitFunds(bob, carol, {from:alice, value: 11})
       .then( (txn) => {
-        assert.equal((bobBalance.plus(5)).toString(10), web3.eth.getBalance(bob).toString(10), "Recipient 1 did not receive the funds");
-        assert.equal((carolBalance.plus(5)).toString(10), web3.eth.getBalance(carol).toString(10), "Recipient 2 did not receive the funds");
-        assert.equal(web3.eth.getBalance(contract.address).toString(10), 1, "Contract did not save the extra Wei");
+        return contract.balances(bob);
+      }).then( bobBalance => {
+        assert.equal(bobBalance.toString(10), "5", "Recipient 1 did not receive the funds");
+        return contract.balances(carol);
+      }).then( carolBalance => {
+        assert.equal(carolBalance.toString(10), "5", "Recipient 2 did not receive the funds");
+        return contract.balances(alice);
+      }).then( senderBalance => {
+        assert.equal(senderBalance.toString(10), "1", "Send did not receive the remainder");
       });
   });
+
+  // xit('should allow recipients to withdraw funds', () => {
+  //   const bobBalance = web3.eth.balance(bob);
+  //
+  //   return contract.withdrawFunds({from:bob})
+  //     .then( (txn) => {
+  //       assert.equal(contract.balances[bob], 5, "Recipient 1 did not receive the funds");
+  //       assert.equal(contract.balances[carol], 5, "Recipient 2 did not receive the funds");
+  //       assert.equal(contract.balances[alice], 1, "Send did not receive the remainder");
+  //     });
+  // });
 
   it('Alice should be able to kill it', () => {
     return contract.killMe({from:alice})

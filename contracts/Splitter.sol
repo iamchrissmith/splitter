@@ -2,8 +2,9 @@ pragma solidity ^0.4.6;
 
 contract Splitter {
   address public owner;
+  mapping(address => uint) public balances;
 
-  event LogSplitReceived(address sender, uint amount);
+  event LogSplitReceived(address sender, address recipient, uint amount);
   event LogFundsSent(address recipient, uint amount);
 
   function Splitter() {
@@ -17,7 +18,6 @@ contract Splitter {
 
   function splitFunds(address recipient1, address recipient2)
     public
-    onlyMe()
     payable
     returns(bool success)
   {
@@ -25,20 +25,29 @@ contract Splitter {
 
     uint amountSplit = msg.value;
 
-    LogSplitReceived(msg.sender, msg.value);
-
     if ( msg.value % 2 != 0 ) {
       amountSplit -= 1;
+      balances[msg.sender] += 1;
     }
 
-    LogFundsSent(recipient1, amountSplit / 2);
-    recipient1.transfer(amountSplit / 2);
+    uint halfValue = amountSplit / 2;
 
-    LogFundsSent(recipient1, amountSplit / 2);
-    recipient2.transfer(amountSplit / 2);
+    LogSplitReceived(msg.sender, recipient1, halfValue);
+    balances[recipient1] += halfValue;
+
+    LogSplitReceived(msg.sender, recipient2, halfValue);
+    balances[recipient2] += halfValue;
 
     return true;
   }
+
+  /*function withdrawFunds()
+    public
+    payable
+    return(bool success)
+  {
+
+  }*/
 
   function killMe()
     public
