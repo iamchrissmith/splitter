@@ -4,7 +4,7 @@ contract Splitter {
   address public owner;
   mapping(address => uint) public balances;
 
-  event LogSplitReceived(address sender, address recipient, uint amount);
+  event LogSplitReceived(address sender, address recipient1, address recipient2, uint received);
   event LogFundsSent(address recipient, uint amount);
 
   function Splitter() {
@@ -21,7 +21,10 @@ contract Splitter {
     payable
     returns(bool success)
   {
-    if(msg.value == 0) revert();
+    require(msg.value == 0);
+    require(recipient1 != 0);
+    require(recipient2 != 0);
+    //check for empty addresses
 
     uint amountSplit = msg.value;
 
@@ -32,10 +35,8 @@ contract Splitter {
 
     uint halfValue = amountSplit / 2;
 
-    LogSplitReceived(msg.sender, recipient1, halfValue);
+    LogSplitReceived(msg.sender, recipient1, recpient2, amountSplit);
     balances[recipient1] += halfValue;
-
-    LogSplitReceived(msg.sender, recipient2, halfValue);
     balances[recipient2] += halfValue;
 
     return true;
@@ -47,19 +48,19 @@ contract Splitter {
   {
     if(balances[msg.sender] == 0) revert();
 
-    uint toSend = balances[msg.sender];
+    uint amountToSend = balances[msg.sender];
     balances[msg.sender] = 0;
-    LogFundsSent(msg.sender, toSend);
+    LogFundsSent(msg.sender, amountToSend);
 
-    msg.sender.transfer(toSend);
+    msg.sender.transfer(amountToSend);
 
     return true;
   }
 
-  function killMe()
+  function destroy()
     public
     onlyMe()
   {
-    suicide(owner);
+    selfdestruct(owner);
   }
 }

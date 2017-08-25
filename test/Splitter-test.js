@@ -71,7 +71,7 @@ contract('Splitter', (accounts) => {
   });
 
   it('Alice should be able to kill it', () => {
-    return contract.killMe({from:alice})
+    return contract.destroy({from:alice})
       .then( (txn) => {
         return contract.owner({from:alice})
           .then( (owner) => {
