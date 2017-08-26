@@ -49,6 +49,7 @@ contract('Splitter', (accounts) => {
 
   it('should allow recipients to withdraw funds', () => {
     const startingBalance = web3.eth.getBalance(bob);
+    const gasPrice = 1;
     let toBeSent;
 
     return contract.splitFunds(bob, carol, {from:alice, value: 10})
@@ -57,9 +58,9 @@ contract('Splitter', (accounts) => {
       }).then( balance => {
         assert.equal(balance.toString(10), "5", "Recipient 1 was not allotted half the funds");
         toBeSent = balance;
-        return contract.withdrawFunds({from:bob, gasPrice: 1})
+        return contract.withdrawFunds({from:bob, gasPrice: gasPrice})
       }).then( txn => {
-        const sentLessGas = toBeSent.minus(txn.receipt.gasUsed);
+        const sentLessGas = toBeSent.minus(txn.receipt.gasUsed * gasPrice);
         const currentBalance = web3.eth.getBalance(bob);
 
         assert.deepEqual(startingBalance.plus(sentLessGas), currentBalance, "Recipient 1 did not receive the funds");
